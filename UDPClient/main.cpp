@@ -11,8 +11,8 @@ int main()
 
     Socket sock(8081);
 
-    while (true)
-        sock.send(conf.getServerAddress(), conf.getServerPort());
+    for (size_t i = 0; i < 20; i++)
+        sock.send(conf.getServerAddress(), conf.getServerPort(), "test2");
     
     return 0;
 }

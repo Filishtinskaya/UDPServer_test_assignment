@@ -1,5 +1,6 @@
 #include "ServerConfig.h"
 #include "Networking.h"
+#include <iostream>
 
 int main()
 {
@@ -11,8 +12,10 @@ int main()
 
     Socket sock(conf.getPort());
 
-    while(true)
-        sock.receive();
+    while(true) {
+        auto msg = sock.receive();
+    }
+        
     
     return 0;
 }

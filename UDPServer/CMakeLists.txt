@@ -7,7 +7,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(../Common)
 
-add_executable(UDPServer ServerConfig.cpp main.cpp)
+set (SRC ServerConfig.cpp
+         ../Common/Networking.cpp
+         main.cpp)
+
+add_executable(UDPServer ${SRC})
 
 if(WIN32)
   target_link_libraries(UDPServer wsock32 ws2_32)

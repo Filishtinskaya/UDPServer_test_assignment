@@ -7,7 +7,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(../Common)
 
-add_executable(UDPClient ClientConfig.cpp main.cpp)
+set (SRC ClientConfig.cpp
+         ../Common/Networking.cpp
+         main.cpp)
+
+add_executable(UDPClient ${SRC})
 
 if(WIN32)
   target_link_libraries(UDPClient wsock32 ws2_32)
