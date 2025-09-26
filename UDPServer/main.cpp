@@ -1,21 +1,17 @@
-#include "ServerConfig.h"
-#include "Networking.h"
 #include <iostream>
+#include "Networking.h"
+#include "Server.h"
 
 int main()
 {
-    ServerConfig conf;
-
 #ifdef _WIN32
     WSAHandler wsa;
 #endif
+    Server sv;
 
-    Socket sock(conf.getPort());
+    std::cout << "Server is running, press any key to exit";
 
-    while(true) {
-        auto msg = sock.receive();
-    }
+    getchar();
         
-    
     return 0;
 }

@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 20)
 include_directories(../Common)
 
 set (SRC ServerConfig.cpp
+         
          ../Common/Networking.cpp
          main.cpp)
 

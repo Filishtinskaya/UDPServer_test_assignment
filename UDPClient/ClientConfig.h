@@ -5,7 +5,7 @@ class ClientConfig
 {
 public:
     ClientConfig();
-    std::string getServerAddress() const noexcept {
+    std::string_view getServerAddress() const noexcept {
         return serverAddress;
     }
     unsigned short getServerPort() const noexcept {

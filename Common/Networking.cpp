@@ -1,9 +1,10 @@
 #include "Networking.h"
 
-
 #include <stdexcept>
 #include <tchar.h>
 #include <iostream>
+#include <assert.h>
+
 
 #ifdef _WIN32
     #include <winsock2.h>
@@ -13,7 +14,8 @@
     #include <netinet/in.h>
     #include <fcntl.h>
 #endif
-#include <assert.h>
+
+#include "Utils.h"
 
 namespace {
     sockaddr_in formatAddress(const char* ip, unsigned short port)
@@ -54,34 +56,29 @@ Socket::Socket(unsigned short port) {
     }
 }
 
-Socket::ReceivedMsg Socket::receive() const {
-    ReceivedMsg res;
-    res.message.resize(MTU);
+Message Socket::receive() const {
+    Message res;
 
     sockaddr_in senderAddress;
     int addrLength = sizeof(senderAddress);
 
-    int bytes_received = recvfrom(sock, res.message.data(), res.message.size(), 0, (SOCKADDR*)&senderAddress, &addrLength);
+    int bytes_received = recvfrom(sock, res.packet.msg, MTU, 0, (SOCKADDR*)&senderAddress, &addrLength);
 
     if (bytes_received == SOCKET_ERROR) {
         std::cout << "Error receiving data " + std::to_string(WSAGetLastError()) << std::endl;
         return {};
     }
 
-    res.sourceIp.resize(INET_ADDRSTRLEN);
-    inet_ntop(AF_INET, &(senderAddress.sin_addr), res.sourceIp.data(), INET_ADDRSTRLEN);
-    res.sourcePort = ntohs(senderAddress.sin_port);
-
-    std::cout << "Received datagram: " << res.message << " from " << res.sourceIp << ":" << res.sourcePort << std::endl;
+    res.ip.resize(INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &(senderAddress.sin_addr), res.ip.data(), INET_ADDRSTRLEN);
+    res.port = ntohs(senderAddress.sin_port);
 
     return res;
 }
 
-void Socket::send(std::string ip, unsigned short port, std::string message) const {
-    assert(message.size() <= MTU);
-
-    sockaddr_in clientAddress = formatAddress(ip.data(), port);
-    int bytesSent = sendto(sock, message.data(), message.size(), 0, (SOCKADDR*)&clientAddress, sizeof(clientAddress));
+void Socket::send(const Message& message) const {
+    sockaddr_in clientAddress = formatAddress(message.ip.data(), message.port);
+    int bytesSent = sendto(sock, message.packet.msg, MTU, 0, (SOCKADDR*)&clientAddress, sizeof(clientAddress));
 
     if (bytesSent == SOCKET_ERROR) {
         std::cout << "Error sending data " + std::to_string(WSAGetLastError()) << std::endl;

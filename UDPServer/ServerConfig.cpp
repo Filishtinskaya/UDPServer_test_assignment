@@ -1,21 +1,17 @@
 #include "ServerConfig.h"
 #include <string_view>
-#include <filesystem>
 #include <fstream>
+#include <filesystem>
 
-#include <iostream>
+#include "Utils.h"
 
 namespace {
-#ifdef _WIN32
-    const std::string_view configPath = "C:/ProgramData/UDPClientServer/serverConfig.txt";
-#else
-
-#endif
+    constexpr std::string_view configName = "serverConfig.txt";
 }
 
 ServerConfig::ServerConfig()
 {
-    std::ifstream f(std::filesystem::path{configPath});
+    std::ifstream f(std::filesystem::path{filesPath} / configName);
     if (!f.is_open()) {
         throw std::runtime_error("No serverConfig.txt at executable's directory.");
     }

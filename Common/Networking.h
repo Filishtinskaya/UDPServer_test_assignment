@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "Protocol.h"
 
 #ifdef _WIN32
     #include <winsock2.h>
@@ -15,25 +16,26 @@
     #include <sys/socket.h>
 
 #endif
+#include <ws2tcpip.h>
+
+struct Message
+{
+    std::string ip;
+    unsigned short port;
+    Packet packet;
+};
 
 class Socket
 {
 public:
     Socket(unsigned short port);
 
-    struct ReceivedMsg
-    {
-        std::string sourceIp;
-        unsigned short sourcePort;
-        std::string message;
-    };
-    ReceivedMsg receive() const;
+    Message receive() const;
 
-    void send(std::string ip, unsigned short port, std::string message) const;
+    void send(const Message& message) const;
 
     ~Socket();
 private:
     SOCKET sock = INVALID_SOCKET; 
     static constexpr std::string localhost = "127.0.0.1";
-    static constexpr size_t MTU = 1200;
 };
