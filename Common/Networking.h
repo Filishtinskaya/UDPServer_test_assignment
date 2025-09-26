@@ -5,6 +5,7 @@
 
 #ifdef _WIN32
     #include <winsock2.h>
+    #include <ws2tcpip.h>
 
     class WSAHandler {
     public:
@@ -14,9 +15,9 @@
 
 #else
     #include <sys/socket.h>
-
+    #define INVALID_SOCKET -1
 #endif
-#include <ws2tcpip.h>
+
 
 struct Message
 {
@@ -38,6 +39,10 @@ public:
 
     ~Socket();
 private:
+#ifdef _WIN32
     SOCKET sock = INVALID_SOCKET; 
+#else
+    int sock = INVALID_SOCKET; 
+#endif
     static constexpr std::string localhost = "127.0.0.1";
 };

@@ -1,7 +1,6 @@
 #include "Networking.h"
 
 #include <stdexcept>
-#include <tchar.h>
 #include <iostream>
 #include <assert.h>
 
@@ -9,10 +8,13 @@
 #ifdef _WIN32
     #include <winsock2.h>
     #include <ws2tcpip.h>
+    #include <tchar.h>
 #else
     #include <sys/socket.h>
     #include <netinet/in.h>
+    #include <arpa/inet.h>
     #include <fcntl.h>
+    #include <unistd.h>
 #endif
 
 #include "Utils.h"
@@ -22,7 +24,12 @@ namespace {
     {
         sockaddr_in address;
         address.sin_family = AF_INET;
+    
+#ifdef _WIN32
         InetPton(AF_INET, _T(ip), &address.sin_addr);
+#else
+        inet_pton(AF_INET, ip, &address.sin_addr);
+#endif
         address.sin_port = htons(port);
         return address;
     }
@@ -37,6 +44,7 @@ namespace {
     }
 }
 
+#ifdef _WIN32
 WSAHandler::WSAHandler() {
     WSAData wsaData;
     int wsaerr;
@@ -50,6 +58,7 @@ WSAHandler::WSAHandler() {
 WSAHandler::~WSAHandler() {
     WSACleanup();
 }
+#endif
 
 void Message::networkEndianConversion() {
     if constexpr (std::endian::native == std::endian::big)
@@ -75,13 +84,15 @@ Socket::Socket(unsigned short port) {
     sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
     if (sock == INVALID_SOCKET) {
-        throw std::runtime_error("Error creating socket " + std::to_string(WSAGetLastError()));
+        throw std::runtime_error("Error creating socket ");
+        // throw std::runtime_error("Error creating socket " + std::to_string(WSAGetLastError()));
     }
 
     sockaddr_in address = formatAddress(localhost.data(), port);
 
-    if (bind(sock, (SOCKADDR*)&address, sizeof(address)) == SOCKET_ERROR) {
-        throw std::runtime_error("Bind socket failed " + std::to_string(WSAGetLastError()));
+    if (bind(sock, (sockaddr*)&address, sizeof(address)) < 0) {
+        throw std::runtime_error("Bind socket failed ");
+        // throw std::runtime_error("Bind socket failed " + std::to_string(WSAGetLastError()));
     }
 }
 
@@ -89,12 +100,13 @@ Message Socket::receive() const {
     Message res;
 
     sockaddr_in senderAddress;
-    int addrLength = sizeof(senderAddress);
+    unsigned int addrLength = sizeof(senderAddress);
 
-    int bytes_received = recvfrom(sock, res.packet.msg, MTU, 0, (SOCKADDR*)&senderAddress, &addrLength);
+    int bytes_received = recvfrom(sock, res.packet.msg, MTU, 0, (sockaddr*)&senderAddress, &addrLength);
 
-    if (bytes_received == SOCKET_ERROR) {
-        std::cout << "Error receiving data " + std::to_string(WSAGetLastError()) << std::endl;
+    if (bytes_received < 0) {
+        std::cout << "Error receiving data ";
+        //std::cout << "Error receiving data " + std::to_string(WSAGetLastError()) << std::endl;
         return {};
     }
 
@@ -113,11 +125,12 @@ void Socket::send(Message&& message) const {
         message.packet.msg, 
         packetLength(message.packet.basic.header.type), 
         0, 
-        (SOCKADDR*)&clientAddress, 
+        (sockaddr*)&clientAddress, 
         sizeof(clientAddress));
 
-    if (bytesSent == SOCKET_ERROR) {
-        std::cout << "Error sending data " + std::to_string(WSAGetLastError()) << std::endl;
+    if (bytesSent < 0) {
+        std::cout << "Error sending data ";
+        //std::cout << "Error sending data " + std::to_string(WSAGetLastError()) << std::endl;
     }
 }
 

@@ -1,6 +1,6 @@
 Шлях до конфігів, логу та вихідного файлу:
 - на вінді - "C:/ProgramData/UDPClientServer"
-- на лінуксі "/opt/UDPClientServer"
+- на лінуксі "/var/lib/UDPClientServer"
 
 Формат serverConfig.txt:
 ```

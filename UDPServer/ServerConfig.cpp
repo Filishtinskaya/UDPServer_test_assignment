@@ -19,7 +19,7 @@ ServerConfig::ServerConfig()
     getline(f, s);
     f.close();
 
-    int nRead = sscanf(s.data(), "[port] %d", &port);
+    int nRead = sscanf(s.data(), "[port] %hu", &port);
 
     if (nRead == 0)
         throw std::runtime_error("Config doesn't contain a valid port.");

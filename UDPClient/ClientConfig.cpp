@@ -27,7 +27,7 @@ ClientConfig::ClientConfig()
 
     getline(f, s);
 
-    size_t nRead = sscanf(s.data(), "[serverPort] %d", &serverPort);
+    size_t nRead = sscanf(s.data(), "[serverPort] %hu", &serverPort);
 
     if (nRead == 0)
         throw std::runtime_error("Config doesn't contain a valid serverPort.");
