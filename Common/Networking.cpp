@@ -100,7 +100,12 @@ Message Socket::receive() const {
     Message res;
 
     sockaddr_in senderAddress;
-    unsigned int addrLength = sizeof(senderAddress);
+#ifdef _WIN32
+    int
+#else
+    unsigned int 
+#endif
+        addrLength = sizeof(senderAddress);
 
     int bytes_received = recvfrom(sock, res.packet.msg, MTU, 0, (sockaddr*)&senderAddress, &addrLength);
 
