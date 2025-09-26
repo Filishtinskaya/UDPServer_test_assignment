@@ -23,6 +23,8 @@ struct Message
     std::string ip;
     unsigned short port;
     Packet packet;
+
+    void networkEndianConversion();
 };
 
 class Socket
@@ -32,7 +34,7 @@ public:
 
     Message receive() const;
 
-    void send(const Message& message) const;
+    void send(Message&& message) const;
 
     ~Socket();
 private:

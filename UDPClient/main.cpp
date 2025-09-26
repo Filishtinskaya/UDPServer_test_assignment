@@ -8,7 +8,6 @@
 #include <algorithm>
 
 constexpr std::string_view logName = "clientLog.txt";
-constexpr std::string_view resFileName = "resFile";
 
 void connect(std::string_view ip, unsigned short port, Socket& sock) {
     Message msg;
@@ -16,7 +15,7 @@ void connect(std::string_view ip, unsigned short port, Socket& sock) {
     msg.port = port;
     msg.packet.basic.header.protocolVersion = CUR_PROTOCOL_VERSION;
     msg.packet.basic.header.type = PacketType::Connect;
-    sock.send(msg);
+    sock.send(std::move(msg));
 
     Message response = sock.receive();
         
@@ -39,7 +38,7 @@ void sendRequest(std::string_view ip, unsigned short port, Socket& sock, double 
     msg.packet.request.header.protocolVersion = CUR_PROTOCOL_VERSION;
     msg.packet.request.header.type = PacketType::Request;
     msg.packet.request.value = value;
-    sock.send(msg);
+    sock.send(std::move(msg));
 }
 
 void receiveData(Socket& sock) {
@@ -57,18 +56,35 @@ void receiveData(Socket& sock) {
         std::copy(response.packet.data.data.begin(), response.packet.data.data.end(), std::back_inserter(res));
     }
 
+    for (size_t i = 0; i < VALUES_IN_DATA_PACKET; i++) {
+        std::cout << res[i] << " ";
+    }
+
     std::sort(res.begin(), res.end());
 
+    auto time = std::time(nullptr);
+    std::string resFileName = "res at ";
+    std::string timeStr;
+    timeStr.resize(20);
+    strftime( timeStr.data(), 20, "%F %H-%M-%S", std::localtime(&time) );
+    resFileName.append(timeStr);
+    
     std::ofstream resFile(std::filesystem::path{filesPath} / resFileName, std::ios::binary);
-    for (size_t i = 0; i < res.size(); i++) {
-        resFile << res[i];
+    if (!resFile.is_open()) {
+        throw std::runtime_error("Error opening result file.");
     }
+
+    resFile.write(reinterpret_cast<const char*>(res.data()), res.size() * sizeof(double));
     
     resFile.close();
 }
 
 int main()
 {
+    if (!std::numeric_limits<double>::is_iec559) {
+        throw std::logic_error("This platform does not have IEEE-754 compliant doubles, so sending them over the network is unreliable.");
+    }
+    
     ClientConfig conf;
 
 #ifdef _WIN32
@@ -88,7 +104,7 @@ int main()
     });
 
     t.detach();
-    std::cout << "Client is running, press any key to exit";
+    std::cout << "Client is running, press Enter to exit";
 
     getchar();
     

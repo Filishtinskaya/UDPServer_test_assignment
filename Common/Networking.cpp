@@ -26,6 +26,15 @@ namespace {
         address.sin_port = htons(port);
         return address;
     }
+
+    void reverseDoubleByteOrder(double& n)
+    {
+        uint32_t* h =  reinterpret_cast<uint32_t*>(&n);
+        uint32_t* l =  h + 1;
+        uint32_t tmp = *h;
+        *h = htonl(*l);
+        *l = htonl(tmp);
+    }
 }
 
 WSAHandler::WSAHandler() {
@@ -40,6 +49,26 @@ WSAHandler::WSAHandler() {
 
 WSAHandler::~WSAHandler() {
     WSACleanup();
+}
+
+void Message::networkEndianConversion() {
+    if constexpr (std::endian::native == std::endian::big)
+        return;
+    switch (packet.basic.header.type) {
+        case PacketType::Connect:
+        case PacketType::Fin: {
+            return;
+        }
+        case PacketType::Request: {
+            reverseDoubleByteOrder(packet.request.value);
+            break;
+        }
+        case PacketType::Data: {
+            for (size_t i = 0; i < packet.data.data.size(); i++) {
+                reverseDoubleByteOrder(packet.data.data[i]);
+            }
+        }
+    }
 }
 
 Socket::Socket(unsigned short port) {
@@ -73,12 +102,19 @@ Message Socket::receive() const {
     inet_ntop(AF_INET, &(senderAddress.sin_addr), res.ip.data(), INET_ADDRSTRLEN);
     res.port = ntohs(senderAddress.sin_port);
 
+    res.networkEndianConversion();
     return res;
 }
 
-void Socket::send(const Message& message) const {
+void Socket::send(Message&& message) const {
+    message.networkEndianConversion();
     sockaddr_in clientAddress = formatAddress(message.ip.data(), message.port);
-    int bytesSent = sendto(sock, message.packet.msg, MTU, 0, (SOCKADDR*)&clientAddress, sizeof(clientAddress));
+    int bytesSent = sendto(sock, 
+        message.packet.msg, 
+        packetLength(message.packet.basic.header.type), 
+        0, 
+        (SOCKADDR*)&clientAddress, 
+        sizeof(clientAddress));
 
     if (bytesSent == SOCKET_ERROR) {
         std::cout << "Error sending data " + std::to_string(WSAGetLastError()) << std::endl;
