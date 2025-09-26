@@ -60,9 +60,9 @@ void receiveData(Socket& sock, unsigned short id) {
         std::copy(response.packet.data.data.begin(), response.packet.data.data.end(), std::back_inserter(res));
     }
 
-    for (size_t i = 0; i < VALUES_IN_DATA_PACKET; i++) {
-        std::cout << res[i] << " ";
-    }
+    // for (size_t i = 0; i < VALUES_IN_DATA_PACKET; i++) {
+    //     std::cout << res[i] << " ";
+    // }
 
     std::sort(res.begin(), res.end());
 

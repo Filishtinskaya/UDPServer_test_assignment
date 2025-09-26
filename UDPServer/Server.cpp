@@ -96,9 +96,9 @@ void Server::processConnections() {
         for (size_t i = 0; i < VALUES_IN_DATA_PACKET; i++) {
             packet.data.data[i] = urd(re);
 
-            if (conn.packetsSent == 0) {
-                std::cout << packet.data.data[i] << " ";
-            }
+            // if (conn.packetsSent == 0) {
+            //     std::cout << packet.data.data[i] << " ";
+            // }
         }
         toSend.add({conn.ip, conn.port, packet});
 
