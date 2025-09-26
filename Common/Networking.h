@@ -25,6 +25,10 @@ struct Message
     unsigned short port;
     Packet packet;
 
+    bool empty() {
+        return ip.empty();
+    }
+
     void networkEndianConversion();
 };
 

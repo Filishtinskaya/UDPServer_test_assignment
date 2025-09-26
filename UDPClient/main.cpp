@@ -18,6 +18,10 @@ void connect(std::string_view ip, unsigned short port, Socket& sock) {
     sock.send(std::move(msg));
 
     Message response = sock.receive();
+    
+    if (response.empty()) {
+        throw std::runtime_error("Could not connect to the server.");
+    }
         
     if (response.packet.basic.header.type != PacketType::Connect) {
         throw std::runtime_error("Expected connect packet, received something else.");
