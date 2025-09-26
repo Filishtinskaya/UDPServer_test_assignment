@@ -41,7 +41,7 @@ void sendRequest(std::string_view ip, unsigned short port, Socket& sock, double 
     sock.send(std::move(msg));
 }
 
-void receiveData(Socket& sock) {
+void receiveData(Socket& sock, unsigned short id) {
     std::vector<double> res;
     res.reserve(5'000'000);
     while(true) {
@@ -63,7 +63,7 @@ void receiveData(Socket& sock) {
     std::sort(res.begin(), res.end());
 
     auto time = std::time(nullptr);
-    std::string resFileName = "res at ";
+    std::string resFileName = "res at " + std::to_string(id) + " ";
     std::string timeStr;
     timeStr.resize(20);
     strftime( timeStr.data(), 20, "%F %H-%M-%S", std::localtime(&time) );
@@ -79,7 +79,7 @@ void receiveData(Socket& sock) {
     resFile.close();
 }
 
-int main()
+int main(int argc, char* argv[])
 {
     if (!std::numeric_limits<double>::is_iec559) {
         throw std::logic_error("This platform does not have IEEE-754 compliant doubles, so sending them over the network is unreliable.");
@@ -90,8 +90,12 @@ int main()
 #ifdef _WIN32
     WSAHandler wsa;
 #endif
+    unsigned short ownPort = 9090;
 
-    Socket sock(8081);
+    if (argc == 2)
+        ownPort = std::stoi(argv[1]);
+        
+    Socket sock(ownPort);
 
     auto ip = conf.getServerAddress();
     unsigned short port = conf.getServerPort();
@@ -100,7 +104,7 @@ int main()
         connect(ip, port, sock);
         std::this_thread::sleep_for(std::chrono::seconds{3});
         sendRequest(ip, port, sock, conf.getValue());
-        receiveData(sock);
+        receiveData(sock, ownPort);
     });
 
     t.detach();
